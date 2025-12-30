@@ -4,16 +4,25 @@ import com.ainbondhu.backend.domain.entity.Lawyer;
 import com.ainbondhu.backend.domain.entity.User;
 import com.ainbondhu.backend.domain.enums.Role;
 import com.ainbondhu.backend.dto.CaseNoteRequestDTO;
+import com.ainbondhu.backend.dto.CaseDocumentResponseDTO;
 import com.ainbondhu.backend.dto.CaseNoteResponseDTO;
 import com.ainbondhu.backend.dto.LegalCaseRequestDTO;
 import com.ainbondhu.backend.dto.LegalCaseResponseDTO;
 import com.ainbondhu.backend.repository.UserRepository;
 import com.ainbondhu.backend.service.CaseManagementService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -50,9 +59,10 @@ public class CaseManagementController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LegalCaseResponseDTO>> getAllCases(
-            @AuthenticationPrincipal User currentUser) {
-        return ResponseEntity.ok(caseManagementService.getLawyerCases(getLawyer(currentUser)));
+    public ResponseEntity<Page<LegalCaseResponseDTO>> getAllCases(
+            @AuthenticationPrincipal User currentUser,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(caseManagementService.getLawyerCases(getLawyer(currentUser), pageable));
     }
 
     @GetMapping("/{id}")
@@ -83,5 +93,33 @@ public class CaseManagementController {
             @AuthenticationPrincipal User currentUser,
             @PathVariable UUID id) {
         return ResponseEntity.ok(caseManagementService.getCaseNotes(id, getLawyer(currentUser)));
+    }
+
+    @PostMapping(value = "/{id}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CaseDocumentResponseDTO> uploadDocument(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(caseManagementService.uploadDocument(id, getLawyer(currentUser), file));
+    }
+
+    @GetMapping("/{id}/documents")
+    public ResponseEntity<List<CaseDocumentResponseDTO>> getCaseDocuments(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(caseManagementService.getCaseDocuments(id, getLawyer(currentUser)));
+    }
+
+    @GetMapping("/documents/download/{fileName:.+}")
+    public ResponseEntity<Resource> downloadDocument(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable String fileName) {
+
+        Resource resource = caseManagementService.downloadDocument(fileName, getLawyer(currentUser));
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
     }
 }

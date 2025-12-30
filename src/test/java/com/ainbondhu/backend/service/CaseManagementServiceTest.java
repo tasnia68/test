@@ -9,7 +9,10 @@ import com.ainbondhu.backend.dto.CaseNoteRequestDTO;
 import com.ainbondhu.backend.dto.CaseNoteResponseDTO;
 import com.ainbondhu.backend.dto.LegalCaseRequestDTO;
 import com.ainbondhu.backend.dto.LegalCaseResponseDTO;
+import com.ainbondhu.backend.domain.entity.CaseDocument;
+import com.ainbondhu.backend.dto.CaseDocumentResponseDTO;
 import com.ainbondhu.backend.repository.CaseNoteRepository;
+import com.ainbondhu.backend.repository.CaseDocumentRepository;
 import com.ainbondhu.backend.repository.LegalCaseRepository;
 import com.ainbondhu.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +20,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,7 +47,13 @@ class CaseManagementServiceTest {
     private CaseNoteRepository caseNoteRepository;
 
     @Mock
+    private CaseDocumentRepository caseDocumentRepository;
+
+    @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private FileStorageService fileStorageService;
 
     @InjectMocks
     private CaseManagementService caseManagementService;
@@ -74,7 +90,7 @@ class CaseManagementServiceTest {
     }
 
     @Test
-    void getLawyerCases_ShouldReturnListOfCases() {
+    void getLawyerCases_ShouldReturnPageOfCases() {
         Lawyer lawyer = new Lawyer();
         lawyer.setId(UUID.randomUUID());
 
@@ -82,12 +98,14 @@ class CaseManagementServiceTest {
         legalCase.setId(UUID.randomUUID());
         legalCase.setLawyer(lawyer);
 
-        when(legalCaseRepository.findByLawyerId(lawyer.getId())).thenReturn(Collections.singletonList(legalCase));
+        Page<LegalCase> page = new PageImpl<>(Collections.singletonList(legalCase));
 
-        var cases = caseManagementService.getLawyerCases(lawyer);
+        when(legalCaseRepository.findByLawyerId(eq(lawyer.getId()), any(Pageable.class))).thenReturn(page);
+
+        var cases = caseManagementService.getLawyerCases(lawyer, Pageable.unpaged());
 
         assertFalse(cases.isEmpty());
-        assertEquals(1, cases.size());
+        assertEquals(1, cases.getTotalElements());
     }
 
     @Test
@@ -116,5 +134,46 @@ class CaseManagementServiceTest {
 
         assertNotNull(response);
         assertEquals("Note Title", response.getTitle());
+    }
+
+    @Test
+    void uploadDocument_ShouldReturnDocumentResponse() {
+        // Mock Request Context for ServletUriComponentsBuilder
+        MockHttpServletRequest mockRequest = new MockHttpServletRequest();
+        mockRequest.setScheme("http");
+        mockRequest.setServerName("localhost");
+        mockRequest.setServerPort(8080);
+        mockRequest.setContextPath("");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(mockRequest));
+
+        Lawyer lawyer = new Lawyer();
+        lawyer.setId(UUID.randomUUID());
+
+        LegalCase legalCase = new LegalCase();
+        legalCase.setId(UUID.randomUUID());
+        legalCase.setLawyer(lawyer);
+
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "content".getBytes());
+        String fileName = "uuid_test.pdf";
+
+        when(legalCaseRepository.findById(legalCase.getId())).thenReturn(Optional.of(legalCase));
+        when(fileStorageService.storeFile(any())).thenReturn(fileName);
+
+        CaseDocument savedDocument = new CaseDocument();
+        savedDocument.setId(UUID.randomUUID());
+        savedDocument.setLegalCase(legalCase);
+        savedDocument.setFileName(fileName);
+        savedDocument.setFileUrl("http://localhost:8080/api/lawyer/cases/documents/download/" + fileName);
+        savedDocument.setFileType("application/pdf");
+
+        when(caseDocumentRepository.save(any(CaseDocument.class))).thenReturn(savedDocument);
+
+        CaseDocumentResponseDTO response = caseManagementService.uploadDocument(legalCase.getId(), lawyer, file);
+
+        assertNotNull(response);
+        assertEquals(fileName, response.getFileName());
+        assertEquals("application/pdf", response.getFileType());
+
+        RequestContextHolder.resetRequestAttributes();
     }
 }
