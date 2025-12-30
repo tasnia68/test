@@ -4,11 +4,15 @@ import com.ainbondhu.backend.domain.entity.LegalCase;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface LegalCaseRepository extends JpaRepository<LegalCase, UUID> {
     List<LegalCase> findByLawyerId(UUID lawyerId);
+    Page<LegalCase> findByLawyerId(UUID lawyerId, Pageable pageable);
     List<LegalCase> findByClientId(UUID clientId);
 }
