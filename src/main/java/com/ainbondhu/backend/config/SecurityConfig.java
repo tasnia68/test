@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/lawyers/nearby").permitAll() // Allow public search for now
+                        .requestMatchers("/ws/chat/**").permitAll() // Allow WebSocket handshake (handle auth in Stomp Interceptor in real app)
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
