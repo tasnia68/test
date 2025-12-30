@@ -4,6 +4,7 @@ import com.ainbondhu.backend.domain.entity.Lawyer;
 import com.ainbondhu.backend.domain.entity.Review;
 import com.ainbondhu.backend.dto.LawyerDto;
 import com.ainbondhu.backend.repository.LawyerRepository;
+import com.ainbondhu.backend.repository.LegalCaseRepository;
 import com.ainbondhu.backend.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
@@ -24,6 +25,7 @@ public class LawyerService {
 
     private final LawyerRepository lawyerRepository;
     private final ReviewRepository reviewRepository;
+    private final LegalCaseRepository legalCaseRepository;
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
     public List<LawyerDto> findNearbyLawyers(double lat, double lon, double radiusInMeters) {
@@ -63,9 +65,31 @@ public class LawyerService {
     }
 
     public void updateOnlineStatus(String lawyerId, boolean isOnline) {
-        Lawyer lawyer = lawyerRepository.findById(java.util.UUID.fromString(lawyerId))
+        Lawyer lawyer = lawyerRepository.findById(UUID.fromString(lawyerId))
                 .orElseThrow(() -> new RuntimeException("Lawyer not found"));
         lawyer.setOnline(isOnline);
         lawyerRepository.save(lawyer);
+    }
+
+    public LawyerDto getLawyerById(UUID id) {
+        Lawyer lawyer = lawyerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Lawyer not found"));
+
+        Double averageRating = reviewRepository.getAverageRatingByLawyerId(id);
+        Long totalReviews = reviewRepository.countByLawyerId(id);
+
+        int totalCasesServed = legalCaseRepository.countByLawyerIdAndStatus(id, com.ainbondhu.backend.domain.enums.CaseStatus.CLOSED);
+
+        return LawyerDto.builder()
+                .id(lawyer.getId().toString())
+                .phoneNumber(lawyer.getPhoneNumber())
+                .fullNameBn(lawyer.getFullNameBn())
+                .barLicenseNumber(lawyer.getBarLicenseNumber())
+                .verificationStatus(lawyer.getVerificationStatus().name())
+                .isOnline(lawyer.isOnline())
+                .averageRating(averageRating != null ? averageRating : 0.0)
+                .totalReviews(totalReviews != null ? totalReviews.intValue() : 0)
+                .totalCasesServed(totalCasesServed)
+                .build();
     }
 }

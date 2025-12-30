@@ -41,4 +41,9 @@ public class LawyerController {
          lawyerService.updateOnlineStatus(id, isOnline);
          return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<LawyerDto> getLawyerById(@PathVariable java.util.UUID id) {
+        return ResponseEntity.ok(lawyerService.getLawyerById(id));
+    }
 }

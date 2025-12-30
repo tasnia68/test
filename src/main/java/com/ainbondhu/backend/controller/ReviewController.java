@@ -3,6 +3,7 @@ package com.ainbondhu.backend.controller;
 import com.ainbondhu.backend.domain.entity.User;
 import com.ainbondhu.backend.dto.ReviewDto;
 import com.ainbondhu.backend.service.ReviewService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +24,7 @@ public class ReviewController {
     @PreAuthorize("hasRole('CLIENT')")
     public ResponseEntity<ReviewDto> createReview(
             @AuthenticationPrincipal User currentUser,
-            @RequestBody ReviewDto reviewDto) {
+            @Valid @RequestBody ReviewDto reviewDto) {
         return ResponseEntity.ok(reviewService.createReview(reviewDto, currentUser));
     }
 

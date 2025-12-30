@@ -25,7 +25,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/lawyers/nearby").permitAll() // Allow public search for now
+                        .requestMatchers("/api/v1/lawyers/nearby", "/api/v1/lawyers/{id}").permitAll() // Allow public search and profile view
+                        .requestMatchers("/api/v1/reviews/lawyer/**").permitAll() // Allow viewing reviews
                         .requestMatchers("/ws/chat/**").permitAll() // Allow WebSocket handshake (handle auth in Stomp Interceptor in real app)
                         .anyRequest().authenticated()
                 )

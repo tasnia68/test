@@ -36,10 +36,10 @@
     - **Lawyer Profile Update**: Display average rating and review count on Lawyer profile.
 
 ### Lawyer Public Profile Enhancements
-- [ ] **Public View of Lawyer Profile**: Allow unauthenticated or client users to view lawyer details including:
+- [x] **Public View of Lawyer Profile**: Allow unauthenticated or client users to view lawyer details including:
     - Average Rating
     - Recent Reviews
-    - Success Rate (derived from Closed cases?)
+    - Success Rate (derived from Closed cases as Total Cases Served)
 
 ## 3. Production-Grade Features (TODO) - Brainstorming
 

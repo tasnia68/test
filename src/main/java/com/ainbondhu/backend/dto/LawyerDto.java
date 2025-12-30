@@ -15,4 +15,5 @@ public class LawyerDto {
     private double distance; // calculated distance
     private Double averageRating;
     private Integer totalReviews;
+    private Integer totalCasesServed;
 }

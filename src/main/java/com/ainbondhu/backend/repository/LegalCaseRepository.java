@@ -1,6 +1,7 @@
 package com.ainbondhu.backend.repository;
 
 import com.ainbondhu.backend.domain.entity.LegalCase;
+import com.ainbondhu.backend.domain.enums.CaseStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,4 +16,5 @@ public interface LegalCaseRepository extends JpaRepository<LegalCase, UUID> {
     List<LegalCase> findByLawyerId(UUID lawyerId);
     Page<LegalCase> findByLawyerId(UUID lawyerId, Pageable pageable);
     List<LegalCase> findByClientId(UUID clientId);
+    int countByLawyerIdAndStatus(UUID lawyerId, CaseStatus status);
 }
