@@ -37,6 +37,7 @@ public class CaseManagementService {
     private final CaseDocumentRepository caseDocumentRepository;
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
+    private final AuditService auditService;
 
     @Transactional
     public LegalCaseResponseDTO createCase(Lawyer lawyer, LegalCaseRequestDTO request) {
@@ -57,6 +58,8 @@ public class CaseManagementService {
         }
 
         legalCase = legalCaseRepository.save(legalCase);
+        auditService.logChange("LegalCase", legalCase.getId().toString(), "CREATE", "Case created");
+        auditService.logChange("LegalCase", legalCase.getId().toString(), "UPDATE", "Status: " + request.getStatus());
         return mapToDTO(legalCase);
     }
 
@@ -111,6 +114,7 @@ public class CaseManagementService {
         }
 
         legalCase = legalCaseRepository.save(legalCase);
+        auditService.logChange("LegalCase", legalCase.getId().toString(), "UPDATE", "Case updated. Status: " + request.getStatus());
         return mapToDTO(legalCase);
     }
 
@@ -131,6 +135,7 @@ public class CaseManagementService {
         note.setAttachmentUrl(request.getAttachmentUrl());
 
         note = caseNoteRepository.save(note);
+        auditService.logChange("CaseNote", note.getId().toString(), "CREATE", "Note added to case: " + caseId);
         return mapToDTO(note);
     }
 
@@ -174,6 +179,7 @@ public class CaseManagementService {
         document.setUploadedAt(LocalDateTime.now());
 
         document = caseDocumentRepository.save(document);
+        auditService.logChange("CaseDocument", document.getId().toString(), "UPLOAD", "Document uploaded: " + fileName);
         return mapToDTO(document);
     }
 
