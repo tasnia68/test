@@ -74,7 +74,7 @@
     - View System Analytics (Active users, Cases count).
 
 ### Security & Reliability
-- [ ] **Audit Logging**: Track who changed what (especially for Case files).
+- [x] **Audit Logging**: Track who changed what (especially for Case files).
 - [ ] **Rate Limiting**: Prevent abuse of APIs.
 - [ ] **Data Backup Strategy**: Automated backups for DB and File Storage.
 
