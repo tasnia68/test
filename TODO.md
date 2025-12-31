@@ -75,7 +75,7 @@
 
 ### Security & Reliability
 - [x] **Audit Logging**: Track who changed what (especially for Case files).
-- [ ] **Rate Limiting**: Prevent abuse of APIs.
+- [x] **Rate Limiting**: Prevent abuse of APIs.
 - [ ] **Data Backup Strategy**: Automated backups for DB and File Storage.
 
 ### Infrastructure
